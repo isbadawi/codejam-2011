@@ -40,7 +40,7 @@ class OrderBook(object):
                 for match in self._sorted_sell_orders(matches):
                     match['Filled'] = 'F' 
                     if shares_left >= match['Shares']:
-                        self.orders.append(self._trade_execution(match, order, shares_left, match['Price']))
+                        self.orders.append(self._trade_execution(match, order, match['Shares'], match['Price']))
                         shares_left -= match['Shares']
                     else:
                         self.orders.append(self._trade_execution(match, order, shares_left, match['Price']))
@@ -51,7 +51,7 @@ class OrderBook(object):
                 for match in self._sorted_buy_orders(matches):
                     match['Filled'] = 'F'
                     if shares_left >= match['Shares']:
-                        self.orders.append(self._trade_execution(order, match, shares_left, match['Price']))
+                        self.orders.append(self._trade_execution(order, match, match['Shares'], match['Price']))
                         shares_left -= match['Shares']
                     else:
                         self.orders.append(self._trade_execution(order, match, shares_left, match['Price']))
