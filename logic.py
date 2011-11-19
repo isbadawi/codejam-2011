@@ -60,6 +60,8 @@ class OrderBook(object):
             shares_left = order['amount']
             if order['action'] == 'B':
                 for match in self._sorted_sell_orders(matches):
+                    if match['state'] == 'F':
+                        continue
                     match['state'] = 'F' 
                     if shares_left >= match['amount']:
                         self.orders.append(self._trade_execution(match, order, match['amount'], match['price']))
@@ -71,6 +73,8 @@ class OrderBook(object):
                         break
             elif order['action'] == 'S':
                 for match in self._sorted_buy_orders(matches):
+                    if match['state'] == 'F':
+                        continue
                     match['state'] = 'F'
                     if shares_left >= match['amount']:
                         self.orders.append(self._trade_execution(order, match, match['amount'], match['price']))
