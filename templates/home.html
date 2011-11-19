@@ -4,6 +4,9 @@
 {% end %}
 
 {% block body %}
+<form action="/exchange/reset" method="post">
+<input type="submit" value="Reset exchange" />
+</form>
 <form action="/exchange/snapshot" method="get">
 <input type="submit" value="Generate snapshot" />
 </form>

@@ -30,6 +30,11 @@ class GUIHandler(tornado.web.RequestHandler):
     def get(self):
         self.finish(render_home_page())
 
+class ResetHandler(tornado.web.RequestHandler):
+    def post(self):
+        order_book.reset()
+        self.redirect('/exchange/home')
+
 class SnapshotHandler(tornado.web.RequestHandler):
     snapshot = ''
     num = 0
@@ -60,14 +65,10 @@ class SnapshotHandler(tornado.web.RequestHandler):
         httpclient.fetch(SILANIS_URL, lambda r: None, method='POST', headers=headers, body=message)
         self.redirect('/exchange/home')
 
-    def _log_response(self, response):
-        print response.code
-        print response.headers
-        print response.body
-
 application = tornado.web.Application([
     (r'/exchange/endpoint', TradeHandler),
     (r'/exchange/home', GUIHandler),
+    (r'/exchange/reset', ResetHandler),
     (r'/exchange/snapshot', SnapshotHandler),
     (r'/exchange/static/(.*)', tornado.web.StaticFileHandler, {'path': 'static'})
 ])

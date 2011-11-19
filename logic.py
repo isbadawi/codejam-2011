@@ -25,6 +25,11 @@ class OrderBook(object):
         self.pool = ThreadPool(10)
         self.httpclient = httpclient
 
+    def reset(self):
+        self.orders = []
+        match_number[0] = 0
+        ids.update({'B': 0, 'S': 0, 'O': 0})
+
     def to_silanis_json(self):
         return [self._remove_keys(d, 'twilio', 'broker', 'parent') for d in self.orders]
 
