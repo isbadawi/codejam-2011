@@ -1,0 +1,43 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Georgia', serif;
+    background: white;
+    color: black;
+}
+
+#page-container {
+    margin: auto;
+}
+
+#header {
+    height: 90px;
+    background-color: black;
+}
+
+a {
+    color: white;
+    text-decoration: none;
+}
+
+#header h2 {
+    color: white;
+    float: left;
+    text-align: left;
+    margin: 0;
+    font-size: 4em;    
+}
+
+#sidebar {
+    float: left;
+    width: 320px;
+    margin-top: 5px;
+}
+
+#body {
+    margin-top: 1px;
+}
+
+table td {
+    border: 1px solid black;
+}

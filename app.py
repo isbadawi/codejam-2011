@@ -3,7 +3,7 @@ import tornado.web
 from tornado.httpclient import AsyncHTTPClient
 
 from logic import validate_order, unique_id, OrderBook
-from render import render_reject_xml, render_accept_xml
+from render import render_reject_xml, render_accept_xml, render_snapshot_html
 
 AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
 order_book = OrderBook(AsyncHTTPClient())
@@ -28,7 +28,7 @@ class GUIHandler(tornado.web.RequestHandler):
 
 class SnapshotHandler(tornado.web.RequestHandler):
     def get(self):
-        self.finish(render_snapshot_html)
+        self.finish(render_snapshot_html(order_book.orders[:]))
 
     def post(self):
         # post snapshot to silanis
@@ -37,7 +37,8 @@ class SnapshotHandler(tornado.web.RequestHandler):
 application = tornado.web.Application([
     (r'/exchange/endpoint', TradeHandler),
     (r'/exchange/home', GUIHandler),
-    (r'/exchange/snapshot', SnapshotHandler)
+    (r'/exchange/snapshot', SnapshotHandler),
+    (r'/exchange/static/(.*)', tornado.web.StaticFileHandler, {'path': 'static'})
 ])
 
 if __name__ == '__main__':

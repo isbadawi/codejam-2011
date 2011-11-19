@@ -60,6 +60,7 @@ class OrderBook(object):
                         break
             if shares_left != 0:
                 self.add_order(self._residual_order(order, shares_left))
+            order['Filled'] = 'F' if shares_left != order['Shares'] else 'U'
             self.orders.append(order)    
 
     def _timestamp(self, o):

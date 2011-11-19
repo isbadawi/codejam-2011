@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Electronic Stock Exchange -- Snapshot{% end %}
+
+{% block header %}
+<h2>Electronic Stock Exchange -- Snapshot</h2>
+{% end %}
+
+{% block body %}
+<table id="snapshot">
+<tr>
+<td>Time Stamp</td>
+<td>Buy Sell or Execute</td>
+<td>Order Reference ID</td>
+<td>Execution Match Number</td>
+<td>Stock Amount</td>
+<td>Stock Symbol</td>
+<td>Sell Order Reference ID</td>
+<td>Buy Order Reference ID</td>
+<td>Parent Order Reference ID</td>
+<td>Price</td>
+<td>State (FILL or UNFILLED)</td>
+<td>Client Telephone Number</td>
+</tr>
+{% for item in items %}
+<tr>
+<td>{{ item['Timestamp'] }}</td>
+<td>{{ item['BS'] }}</td>
+<td>{{ item['OrderRefID'] }}</td>
+<td>{{ item['MatchNumber'] }}</td>
+<td>{{ item['Shares'] }}</td>
+<td>{{ item['Stock'] }}</td>
+<td>{{ item['SellerID'] }}</td>
+<td>{{ item['BuyerID'] }}</td>
+<td>{{ item['Parent']['OrderRefID'] if item['Parent'] else '' }}</td>
+<td>{{ '%d.%02d' % (item['Price']/100, item['Price']%100) }}</td>
+<td>{{ item['Filled'] }}</td>
+<td>{{ item['From'] }}</td>
+</tr>
+{% end %}
+</table>
+
+<form action="" method="post">
+<input type="submit" value="Upload to Silanis" />
+</form>
+{% end %}
