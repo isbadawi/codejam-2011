@@ -4,8 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>{% block title %}Electronic Stock Exchange{% end %}</title>
 <link rel="stylesheet" type="text/css" href="static/style.css" />
-{% block extrastyles %}{% end %}
-</script>
+{% block extrahead %}{% end %}
 </head>
 <body>
 <div id="page-container">
@@ -19,6 +18,7 @@
     <form action="/exchange/snapshot" method="get">
         <input type="submit" value="Generate snapshot" />
     </form>         
+    {% block sidebar %}{% end %}
     </div>
     <div id="body">
     {% block body %}{% end %}

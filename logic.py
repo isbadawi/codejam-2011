@@ -25,6 +25,12 @@ class OrderBook(object):
         self.pool = ThreadPool(10)
         self.httpclient = httpclient
 
+    def get_all_stocks(self):
+        return set(o['symbol'] for o in self.orders)
+
+    def orders_for_stock(self, stock):
+        return [o for o in self.orders if o['symbol'] == stock]
+
     def reset(self):
         self.orders = []
         match_number[0] = 0

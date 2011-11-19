@@ -1,4 +1,43 @@
 {% extends "base.html" %}
+
+{% block extrahead %}
+<script src="https://www.google.com/jsapi" type="text/javascript"></script>
+<script>
+{% if prices %}
+    google.load('visualization', '1', {packages:['corechart']});
+    google.setOnLoadCallback(drawChart);
+    function drawChart() {
+        var price_data = new google.visualization.DataTable({{ prices }});
+        var price_chart = new google.visualization.LineChart(document.getElementById('price_chart'));
+        price_chart.draw(price_data, {
+            title: '{{ symbol }} Price',
+            pointSize: 5,
+            hAxis: {
+                title: 'Time',
+                showTextEvery: 1,
+            },
+            vAxis: {title: 'Price'}
+        });
+    }
+{% end %}
+</script>
+{% end %}
+
 {% block header %}
 <h2>Electronic Stock Exchange</h2>
+{% end %}
+
+{% block sidebar %}
+<form action="" method="post">
+<select name="stock">
+    {% for stock in stocks %}
+    <option value="{{ stock }}">{{ stock }}</option>
+    {% end %}
+</select>
+<input type="submit" value="Visualize" />
+</form>
+{% end %}
+
+{% block body %}
+<div id="price_chart"></div>
 {% end %}

@@ -2,6 +2,7 @@ import json
 import tornado.ioloop
 import tornado.web
 from tornado.httpclient import AsyncHTTPClient
+import gviz_api
 
 from logic import validate_order, unique_id, OrderBook
 from render import render_reject_xml, render_accept_xml, render_snapshot_html, render_home_page
@@ -28,7 +29,23 @@ class TradeHandler(tornado.web.RequestHandler):
 
 class GUIHandler(tornado.web.RequestHandler):
     def get(self):
-        self.finish(render_home_page())
+        self.finish(render_home_page(order_book.get_all_stocks()))
+
+    def post(self):
+        stock = self.get_argument('stock')
+        orders = order_book.orders_for_stock(stock)
+        description = {
+            'time': ('string', 'Time'),
+            'price': ('number', 'Price'),
+        }
+        data = [{
+            'time': o['timestamp'].strftime('%H:%M:%S'),
+            'price': o['price']/100.0 + (o['price']%100)/100.0
+        } for o in orders]
+        price_table = gviz_api.DataTable(description)
+        price_table.LoadData(data)
+        price_json = price_table.ToJSon(columns_order=('time', 'price'))
+        self.finish(render_home_page(order_book.get_all_stocks(), price_json, symbol=stock))
 
 class ResetHandler(tornado.web.RequestHandler):
     def post(self):
