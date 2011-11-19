@@ -1,4 +1,5 @@
 import json
+import itertools
 import tornado.ioloop
 import tornado.web
 from tornado.httpclient import AsyncHTTPClient
@@ -10,7 +11,7 @@ from render import render_reject_xml, render_accept_xml, render_snapshot_html, r
 
 SILANIS_URL = 'http://ec2-184-73-166-185.compute-1.amazonaws.com/aws/rest/services/codejam/processes'
 SILANIS_AUTH = 'Y29kZWphbTpzZWNyZXQ='
-AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
+#AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
 httpclient = AsyncHTTPClient()
 order_book = OrderBook(httpclient)
 class TradeHandler(tornado.web.RequestHandler):
@@ -38,12 +39,16 @@ class GUIHandler(tornado.web.RequestHandler):
             'time': ('string', 'Time'),
             'price': ('number', 'Price'),
         }
-        data = [{
+        raw_data = [{
             'time': o['timestamp'].strftime('%H:%M:%S'),
             'price': o['price']/100.0 + (o['price']%100)/100.0
         } for o in orders]
+        binned_data = [] 
+        for time, orders in itertools.groupby(raw_data, lambda o: o['time']):
+            orders = list(orders)
+            binned_data.append({'time': time, 'price': sum(o['price'] for o in orders)/len(orders)})
         price_table = gviz_api.DataTable(description)
-        price_table.LoadData(data)
+        price_table.LoadData(binned_data)
         price_json = price_table.ToJSon(columns_order=('time', 'price'))
         self.finish(render_home_page(order_book.get_all_stocks(), price_json, symbol=stock))
 
