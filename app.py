@@ -3,7 +3,7 @@ import tornado.web
 from tornado.httpclient import AsyncHTTPClient
 
 from logic import validate_order, unique_id, OrderBook
-from render import render_reject_xml, render_accept_xml, render_snapshot_html
+from render import render_reject_xml, render_accept_xml, render_snapshot_html, render_home_page
 
 AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
 order_book = OrderBook(AsyncHTTPClient())
@@ -23,8 +23,7 @@ class TradeHandler(tornado.web.RequestHandler):
 
 class GUIHandler(tornado.web.RequestHandler):
     def get(self):
-        # display gui
-        pass
+        self.finish(render_home_page())
 
 class SnapshotHandler(tornado.web.RequestHandler):
     def get(self):

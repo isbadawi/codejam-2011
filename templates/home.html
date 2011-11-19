@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block header %}
+<h2>Electronic Stock Exchange</h2>
+{% end %}
+
+{% block body %}
+<form action="/exchange/snapshot" method="get">
+<input type="submit" value="Generate snapshot" />
+</form>
+{% end %}
