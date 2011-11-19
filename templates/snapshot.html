@@ -24,18 +24,18 @@
 </tr>
 {% for item in items %}
 <tr>
-<td>{{ item['Timestamp'] }}</td>
-<td>{{ item['BS'] }}</td>
-<td>{{ item['OrderRefID'] }}</td>
-<td>{{ item['MatchNumber'] }}</td>
-<td>{{ item['Shares'] }}</td>
-<td>{{ item['Stock'] }}</td>
-<td>{{ item['SellerID'] }}</td>
-<td>{{ item['BuyerID'] }}</td>
-<td>{{ item['Parent']['OrderRefID'] if item['Parent'] else '' }}</td>
-<td>{{ '%d.%02d' % (item['Price']/100, item['Price']%100) }}</td>
-<td>{{ item['Filled'] }}</td>
-<td>{{ item['From'] }}</td>
+<td>{{ item['timestamp'] }}</td>
+<td>{{ item['action'] }}</td>
+<td>{{ item['orderRef'] }}</td>
+<td>{{ item['matchNumber'] }}</td>
+<td>{{ item['amount'] }}</td>
+<td>{{ item['symbol'] }}</td>
+<td>{{ item['sellOrderRef'] }}</td>
+<td>{{ item['buyOrderRef'] }}</td>
+<td>{{ item['parentOrderRef'] }}</td>
+<td>{{ '%d.%02d' % (item['price']/100, item['price']%100) }}</td>
+<td>{{ item['state'] }}</td>
+<td>{{ item['phone'] }}</td>
 </tr>
 {% end %}
 </table>
