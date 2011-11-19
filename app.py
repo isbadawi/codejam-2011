@@ -5,14 +5,9 @@ from tornado.httpclient import AsyncHTTPClient
 from logic import validate_order, unique_id, OrderBook
 from render import render_reject_xml, render_accept_xml
 
+AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
+order_book = OrderBook(AsyncHTTPClient())
 class TradeHandler(tornado.web.RequestHandler):
-    def initialize(self):
-        AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
-        self.order_book = OrderBook(AsyncHTTPClient())
-
-    def _on_execution(self):
-        pass
-
     def set_default_headers(self):
         self.set_header('Content-Type', 'text/xml; charset=UTF-8')
 
@@ -23,7 +18,7 @@ class TradeHandler(tornado.web.RequestHandler):
         else:
             refid = unique_id(order['BS'])
             order['OrderRefID'] = refid
-            self.order_book.add_order_async(order)
+            order_book.add_order_async(order)
             self.finish(render_accept_xml(refid))
 
 class GUIHandler(tornado.web.RequestHandler):

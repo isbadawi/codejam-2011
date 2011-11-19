@@ -10,14 +10,14 @@ ids = {'B': 0, 'S': 0, 'O': 0}
 def unique_id(prefix):
     with id_lock:
         ids[prefix] += 1
-        return '%s%d' % (prefix, ids[prefix]])
+        return '%s%d' % (prefix, ids[prefix])
 
-match_number = 0
+match_number = [0]
 match_lock = Lock()
-def match_number():
+def get_match_number():
     with match_lock:
-        match_number += 1
-        return match_number
+        match_number[0] += 1
+        return match_number[0]
 
 class OrderBook(object):
     def __init__(self, httpclient):
@@ -66,18 +66,18 @@ class OrderBook(object):
         return o['Timestamp'] if not o['Parent'] else o['Parent']['Timestamp']
 
     def _sorted_sell_orders(self, matches):
-        return sorted(matches, key=lambda o: o['Price'], self._timestamp(o))
+        return sorted(matches, key=lambda o: (o['Price'], self._timestamp(o)))
 
     def _sorted_buy_orders(self, matches):
-        return sorted(matches, key=lambda o: -o['Price'], self._timestamp(o))
+        return sorted(matches, key=lambda o: (-o['Price'], self._timestamp(o)))
 
     def matching_orders(self, order):
-        return [old for old in orders if self._orders_match(old, order)]
+        return [old for old in self.orders if self._orders_match(old, order)]
 
-    def _trade_execution(seller, buyer, shares, price):
+    def _trade_execution(self, seller, buyer, shares, price):
         trade = defaultdict(str)
         trade['Timestamp'] = datetime.datetime.now()
-        trade['MatchNumber'] = match_number()
+        trade['MatchNumber'] = get_match_number()
         trade['BS'] = 'E'
         trade['Shares'] = shares
         trade['Stock'] = seller['Stock']
@@ -88,7 +88,7 @@ class OrderBook(object):
         self._send_notification(trade['MatchNumber'], buyer, shares, price)
         return trade
 
-    def _residual_order(self, parent, shares)
+    def _residual_order(self, parent, shares):
         order = defaultdict(str)
         order.update(parent)
         order['Timestamp'] = datetime.datetime.now()
@@ -103,19 +103,24 @@ class OrderBook(object):
             return False
         condition = new['BS'] == 'S'
         seller, buyer = (old, new)[condition], (new, old)[condition]
-        return (old['Filled'] = 'U' and old['Stock'] == new['Stock'] and
+        return (old['Filled'] == 'U' and old['Stock'] == new['Stock'] and
                 seller['Price'] <= buyer['Price'])
 
-    def _send_notification(match_number, order, shares, price):
+    def _send_notification(self, match_number, order, shares, price):
         params = {
             'MessageType': 'E',
-            'OrderReferenceIdentifier': order['OrderRefID'],
+            'OrderReferenceIdentifier': order['OrderRefID'] if not order['Parent'] else order['Parent']['OrderRefID'],
             'ExecutedShares': shares,
             'ExecutionPrice': price,
             'MatchNumber': match_number,
             'To': order['From']
         }
-        self.httpclient.fetch(order['Broker'], method='POST', body=urlencode(params))
+        self.httpclient.fetch(order['Broker'], lambda r: None, method='POST', body=urlencode(params))
+
+    def _log_response(self, response):
+        print response.code
+        print response.headers
+        print response.body
 
 phone_pattern = re.compile(r'\+[0-9]{1,15}$')
 
@@ -191,7 +196,7 @@ def validate_order(args):
     if endpoint is None:
         return 'E'
 #    order['BrokerEndpoint'] = endpoint
-    order['Broker'] = 'http://%s:%s/%s' % (address, port, endpoint)
+    order['Broker'] = ('http://%s:%s/%s' % (address, port, endpoint)).encode('ascii', 'ignore')
 
     return order
 

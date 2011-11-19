@@ -44,7 +44,7 @@ _snapshot = template.Template("""<table id="snapshot">
 </tr>
 {% end %}
 </table>
-"""
+""")
 
 def render_reject_xml(reason):
     return _reject.generate(reason=reason)
