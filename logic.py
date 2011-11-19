@@ -1,4 +1,36 @@
 import re
+import datetime
+from multiprocessing.pool import ThreadPool
+from collections import OrderedDict
+
+class OrderBook(object):
+    def __init__(self):
+        self.orders = []
+        self.pool = ThreadPool(10)
+
+    def add_order_async(self, order):
+        self.pool.apply_async(self.add_order, args=(order,))
+
+    def add_order(self, order):
+        timestamp = datetime.datetime.now()
+        matches = self.matching_orders(order)
+        if not matches:
+            order['Filled'] = 'U'
+            self.orders.append(order)
+
+    def matching_orders(self, order):
+        return [old for old in orders if self._orders_match(old, order)]
+
+    def _orders_match(self, old, new):
+        pair = {'B': 'S', 'S': 'B'}
+        if old['BS'] != pair[new['BS']]:
+            return False
+        condition = new['BS'] == 'S'
+        seller, buyer = (old, new)[condition], (new, old)[condition]
+        return (old['Filled'] = 'U' and old['Stock'] == new['Stock'] and
+                seller['Price'] <= buyer['Price'])
+
+
 
 phone_pattern = re.compile(r'\+[0-9]{1,15}$')
 
@@ -12,7 +44,7 @@ def validate_order(args):
     message_type = args.get_argument('MessageType', None)
     if message_type is None or message_type != 'O':
         return 'M'
-    order['MessageType'] = message_type
+#    order['MessageType'] = message_type
 
     phone_number = args.get_argument('From', None)
     if phone_number is None or phone_pattern.match(phone_number) is None:
@@ -59,21 +91,22 @@ def validate_order(args):
     address = args.get_argument('BrokerAddress', None)
     if address is None:
         return 'A'
-    order['BrokerAddress'] = address
+#    order['BrokerAddress'] = address
 
     port = args.get_argument('BrokerPort', None)
     if port is None:
         return 'P'
     try:
-        port = int(port)
+        int(port)
     except ValueError:
         return 'P'
-    order['BrokerPort'] = port
+#    order['BrokerPort'] = port
 
     endpoint = args.get_argument('BrokerEndpoint', None)
     if endpoint is None:
         return 'E'
-    order['BrokerEndpoint'] = endpoint
+#    order['BrokerEndpoint'] = endpoint
+    order['Broker'] = 'http://%s:%s/%s' % (address, port, endpoint)
 
     return order
 
