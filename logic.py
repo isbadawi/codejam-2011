@@ -25,6 +25,17 @@ class OrderBook(object):
         self.pool = ThreadPool(10)
         self.httpclient = httpclient
 
+    def to_silanis_json(self):
+        return [self._remove_keys(d, 'twilio', 'broker', 'parent') for d in self.orders]
+
+    def _remove_keys(self, d, *args):
+        result = defaultdict(str)
+        result.update(d)
+        for a in args:
+            if a in result:
+                del result[a]
+        return result
+
     def add_order_async(self, order):
         self.pool.apply_async(self.add_order, args=(order,))
 

@@ -1,3 +1,4 @@
+import json
 import tornado.ioloop
 import tornado.web
 from tornado.httpclient import AsyncHTTPClient
@@ -7,6 +8,7 @@ from render import render_reject_xml, render_accept_xml, render_snapshot_html, r
 
 
 SILANIS_URL = 'http://ec2-184-73-166-185.compute-1.amazonaws.com/aws/rest/services/codejam/processes'
+SILANIS_AUTH = 'Y29kZWphbTpzZWNyZXQ='
 AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
 httpclient = AsyncHTTPClient()
 order_book = OrderBook(httpclient)
@@ -32,7 +34,7 @@ class SnapshotHandler(tornado.web.RequestHandler):
     snapshot = ''
     num = 0
     def get(self):
-        SnapshotHandler.snapshot = order_book.orders[:]
+        SnapshotHandler.snapshot = order_book.to_silanis_json()
         self.finish(render_snapshot_html(SnapshotHandler.snapshot))
 
     def post(self):
@@ -49,7 +51,19 @@ class SnapshotHandler(tornado.web.RequestHandler):
             },
             'transactions': SnapshotHandler.snapshot
         }
+        message = json.dumps(message, default=lambda o: o.isoformat())
         SnapshotHandler.num += 1
+        headers = {
+            'Authorization': 'Basic %s' % SILANIS_AUTH,
+            'Content-type': 'application/json'
+        }
+        httpclient.fetch(SILANIS_URL, lambda r: None, method='POST', headers=headers, body=message)
+        self.redirect('/exchange/home')
+
+    def _log_response(self, response):
+        print response.code
+        print response.headers
+        print response.body
 
 application = tornado.web.Application([
     (r'/exchange/endpoint', TradeHandler),
