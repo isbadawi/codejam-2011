@@ -15,6 +15,12 @@ html, body {
     background-color: black;
 }
 
+#sidebar {
+    float: left;
+    width: 50px;
+    margin-top: 5px;
+} 
+
 a {
     color: white;
     text-decoration: none;

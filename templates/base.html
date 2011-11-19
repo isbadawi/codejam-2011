@@ -12,6 +12,14 @@
 	<div id="header">
     {% block header %}{% end %}
 	</div>
+    <div id="sidebar">
+    <form action="/exchange/reset" method="post">
+        <input type="submit" value="Reset exchange" />
+    </form>
+    <form action="/exchange/snapshot" method="get">
+        <input type="submit" value="Generate snapshot" />
+    </form>         
+    </div>
     <div id="body">
     {% block body %}{% end %}
     </div>
