@@ -1,25 +1,101 @@
 import re
 import datetime
+from urllib import urlencode
+from threading import Lock
 from multiprocessing.pool import ThreadPool
-from collections import OrderedDict
+from collections import defaultdict
+
+id_lock = Lock()
+ids = {'B': 0, 'S': 0, 'O': 0}
+def unique_id(prefix):
+    with id_lock:
+        ids[prefix] += 1
+        return '%s%d' % (prefix, ids[prefix]])
+
+match_number = 0
+match_lock = Lock()
+def match_number():
+    with match_lock:
+        match_number += 1
+        return match_number
 
 class OrderBook(object):
-    def __init__(self):
+    def __init__(self, httpclient):
         self.orders = []
         self.pool = ThreadPool(10)
+        self.httpclient = httpclient
 
     def add_order_async(self, order):
         self.pool.apply_async(self.add_order, args=(order,))
 
     def add_order(self, order):
-        timestamp = datetime.datetime.now()
+        order['Timestamp'] = datetime.datetime.now()
         matches = self.matching_orders(order)
         if not matches:
             order['Filled'] = 'U'
             self.orders.append(order)
+        else:
+            shares_left = order['Shares']
+            if order['BS'] == 'B':
+                for match in self._sorted_sell_orders(matches):
+                    match['Filled'] = 'F' 
+                    if shares_left >= match['Shares']:
+                        self.orders.append(self._trade_execution(match, order, shares_left, match['Price']))
+                        shares_left -= match['Shares']
+                    else:
+                        self.orders.append(self._trade_execution(match, order, shares_left, match['Price']))
+                        self.add_order(self._residual_order(match, match['Shares'] - shares_left))
+                        shares_left = 0
+                        break
+            elif order['BS'] == 'S':
+                for match in self._sorted_buy_orders(matches):
+                    match['Filled'] = 'F'
+                    if shares_left >= match['Shares']:
+                        self.orders.append(self._trade_execution(order, match, shares_left, match['Price']))
+                        shares_left -= match['Shares']
+                    else:
+                        self.orders.append(self._trade_execution(order, match, shares_left, match['Price']))
+                        self.add_order(self._residual_order(match, match['Shares'] - shares_left))
+                        shares_left = 0
+                        break
+            if shares_left != 0:
+                self.add_order(self._residual_order(order, shares_left))
+            self.orders.append(order)    
+
+    def _timestamp(self, o):
+        return o['Timestamp'] if not o['Parent'] else o['Parent']['Timestamp']
+
+    def _sorted_sell_orders(self, matches):
+        return sorted(matches, key=lambda o: o['Price'], self._timestamp(o))
+
+    def _sorted_buy_orders(self, matches):
+        return sorted(matches, key=lambda o: -o['Price'], self._timestamp(o))
 
     def matching_orders(self, order):
         return [old for old in orders if self._orders_match(old, order)]
+
+    def _trade_execution(seller, buyer, shares, price):
+        trade = defaultdict(str)
+        trade['Timestamp'] = datetime.datetime.now()
+        trade['MatchNumber'] = match_number()
+        trade['BS'] = 'E'
+        trade['Shares'] = shares
+        trade['Stock'] = seller['Stock']
+        trade['SellerID'] = seller['OrderRefID']
+        trade['BuyerID'] = buyer['OrderRefID']
+        trade['Price'] = price
+        self._send_notification(trade['MatchNumber'], seller, shares, price)
+        self._send_notification(trade['MatchNumber'], buyer, shares, price)
+        return trade
+
+    def _residual_order(self, parent, shares)
+        order = defaultdict(str)
+        order.update(parent)
+        order['Timestamp'] = datetime.datetime.now()
+        order['Parent'] = parent['Parent'] if parent['Parent'] else parent
+        order['Shares'] = shares
+        order['OrderRefID'] = unique_id('O')
+        return order
 
     def _orders_match(self, old, new):
         pair = {'B': 'S', 'S': 'B'}
@@ -30,7 +106,16 @@ class OrderBook(object):
         return (old['Filled'] = 'U' and old['Stock'] == new['Stock'] and
                 seller['Price'] <= buyer['Price'])
 
-
+    def _send_notification(match_number, order, shares, price):
+        params = {
+            'MessageType': 'E',
+            'OrderReferenceIdentifier': order['OrderRefID'],
+            'ExecutedShares': shares,
+            'ExecutionPrice': price,
+            'MatchNumber': match_number,
+            'To': order['From']
+        }
+        self.httpclient.fetch(order['Broker'], method='POST', body=urlencode(params))
 
 phone_pattern = re.compile(r'\+[0-9]{1,15}$')
 
@@ -39,7 +124,7 @@ def validate_order(args):
     Given HTTP POST parameters, return a dict with the order parameters if
     the order is valid, else return a string with the error code.
     """
-    order = {}
+    order = defaultdict(str)
 
     message_type = args.get_argument('MessageType', None)
     if message_type is None or message_type != 'O':
@@ -110,7 +195,3 @@ def validate_order(args):
 
     return order
 
-ids = {'B': 0, 'S': 0}
-def unique_id(order):
-    ids[order['BS']] += 1
-    return '%s%d' % (order['BS'], ids[order['BS']])
