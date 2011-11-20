@@ -11,7 +11,7 @@ from render import render_reject_xml, render_accept_xml, render_snapshot_html, r
 
 SILANIS_URL = 'http://ec2-184-73-166-185.compute-1.amazonaws.com/aws/rest/services/codejam/processes'
 SILANIS_AUTH = 'Y29kZWphbTpzZWNyZXQ='
-AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
+#AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
 httpclient = AsyncHTTPClient()
 order_book = OrderBook(httpclient)
 class TradeHandler(tornado.web.RequestHandler):
