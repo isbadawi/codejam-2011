@@ -5,6 +5,10 @@ from threading import Lock
 from multiprocessing.pool import ThreadPool
 from collections import defaultdict
 
+from twilio.rest import TwilioRestClient
+twilio = TwilioRestClient()
+
+
 id_lock = Lock()
 ids = {'B': 0, 'S': 0, 'O': 0}
 def unique_id(prefix):
@@ -149,10 +153,8 @@ class OrderBook(object):
         if (order['twilio'] == 'Y'):
             sms_message = 'Your order %s has been executed on for %d shares. Match number is %d. Execution price is %d.%02d per share.' % (params['OrderReferenceIdentifier'], params['ExecutedShares'], params['MatchNumber'], price / 100, price % 100)
 
-    def _log_response(self, response):
-        print response.code
-        print response.headers
-        print response.body
+            twilio.sms.messages.create(to=order['phone'], 
+                from_='19176753626', body=sms_message)
 
 phone_pattern = re.compile(r'\+[0-9]{1,15}$')
 
