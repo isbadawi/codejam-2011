@@ -113,6 +113,11 @@ class SnapshotHandler(tornado.web.RequestHandler):
         httpclient.fetch(SILANIS_URL, lambda r: None, method='POST', headers=headers, body=message)
         self.redirect('/exchange/home')
 
+    def _log_response(self, response):
+        print response.code
+        print response.headers
+        print response.body
+
 application = tornado.web.Application([
     (r'/exchange/endpoint', TradeHandler),
     (r'/exchange/home', GUIHandler),

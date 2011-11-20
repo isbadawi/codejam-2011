@@ -68,7 +68,8 @@ class OrderBook(object):
         if order_index >= orders_len:
             snapshot.extend(self.trades[trade_index:trades_len])
         else:
-            snapshot.extend(self.orders[order_index:orders_len])
+            for o in self.orders[order_index:orders_len]:
+                snapshot.append(self._remove_keys(o, 'twilio', 'broker', 'parent'))
         return snapshot
 
     def _remove_keys(self, d, *args):
