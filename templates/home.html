@@ -5,8 +5,8 @@
 <script>
 {% if prices %}
     google.load('visualization', '1', {packages:['corechart']});
-    google.setOnLoadCallback(drawChart);
-    function drawChart() {
+    google.setOnLoadCallback(drawCharts);
+    function drawCharts() {
         var price_data = new google.visualization.DataTable({{ prices }});
         var price_chart = new google.visualization.LineChart(document.getElementById('price_chart'));
         price_chart.draw(price_data, {
@@ -17,6 +17,17 @@
                 showTextEvery: 1,
             },
             vAxis: {title: 'Price'}
+        }); 
+        var volume_data = new google.visualization.DataTable({{ volume }});
+        var volume_chart = new google.visualization.LineChart(document.getElementById('volume_chart'));
+        volume_chart.draw(volume_data, {
+            title: '{{ symbol }} Volume',
+            pointSize: 5,
+            hAxis: {
+                title: 'Time',
+                showTextEvery: 1,
+            },
+            vAxis: {title: 'Volume'}
         });
     }
 {% end %}
@@ -40,4 +51,5 @@
 
 {% block body %}
 <div id="price_chart"></div>
+<div id="volume_chart"></div>
 {% end %}

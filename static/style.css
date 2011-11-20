@@ -44,6 +44,9 @@ a {
     margin-top: 1px;
 }
 
+table {
+    border-collapse: collapse;
+}
 table td {
     border: 1px solid black;
 }

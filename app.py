@@ -11,7 +11,7 @@ from render import render_reject_xml, render_accept_xml, render_snapshot_html, r
 
 SILANIS_URL = 'http://ec2-184-73-166-185.compute-1.amazonaws.com/aws/rest/services/codejam/processes'
 SILANIS_AUTH = 'Y29kZWphbTpzZWNyZXQ='
-#AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
+AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
 httpclient = AsyncHTTPClient()
 order_book = OrderBook(httpclient)
 class TradeHandler(tornado.web.RequestHandler):
@@ -35,6 +35,11 @@ class GUIHandler(tornado.web.RequestHandler):
     def post(self):
         stock = self.get_argument('stock')
         orders = order_book.orders_for_stock(stock)
+        prices = self._load_price_json(orders)
+        volume = self._load_volume_json(orders)
+        self.finish(render_home_page(order_book.get_all_stocks(), prices, volume, stock))
+       
+    def _load_price_json(self, orders):
         description = {
             'time': ('string', 'Time'),
             'price': ('number', 'Price'),
@@ -45,12 +50,29 @@ class GUIHandler(tornado.web.RequestHandler):
         } for o in orders]
         binned_data = [] 
         for time, orders in itertools.groupby(raw_data, lambda o: o['time']):
-            orders = list(orders)
-            binned_data.append({'time': time, 'price': sum(o['price'] for o in orders)/len(orders)})
+            order_list = list(orders)
+            binned_data.append({'time': time, 'price': sum(o['price'] for o in order_list)/len(order_list)})
         price_table = gviz_api.DataTable(description)
         price_table.LoadData(binned_data)
-        price_json = price_table.ToJSon(columns_order=('time', 'price'))
-        self.finish(render_home_page(order_book.get_all_stocks(), price_json, symbol=stock))
+        return price_table.ToJSon(columns_order=('time', 'price'))        
+
+    def _load_volume_json(self, orders):
+        description = {
+            'time': ('string', 'Time'),
+            'volume': ('number', 'Volume'),
+        }
+        raw_data = [{
+            'time': o['timestamp'].strftime('%H:%M:%S'),
+            'volume': o['amount']
+        } for o in orders]
+        binned_data = [] 
+        for time, orders in itertools.groupby(raw_data, lambda o: o['time']):
+            order_list = list(orders)
+            binned_data.append({'time': time, 'volume': int(1.0*sum(o['volume'] for o in order_list)/len(order_list))})
+        volume_table = gviz_api.DataTable(description)
+        volume_table.LoadData(binned_data)
+        return volume_table.ToJSon(columns_order=('time', 'volume'))
+        
 
 class ResetHandler(tornado.web.RequestHandler):
     def post(self):
