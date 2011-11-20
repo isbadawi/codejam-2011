@@ -23,6 +23,13 @@ def get_match_number():
         match_number[0] += 1
         return match_number[0]
 
+stock_locks = {}
+def stock_lock(stock):
+    if stock in stock_locks:
+        return stock_locks[stock]
+    stock_locks[stock] = Lock()
+    return stock_locks[stock]
+
 class OrderBook(object):
     def __init__(self, httpclient):
         self.orders = []
@@ -55,44 +62,42 @@ class OrderBook(object):
         self.pool.apply_async(self.add_order, args=(order,))
 
     def add_order(self, order):
-        matches = self.matching_orders(order)
-        if not matches:
-            order['state'] = 'U'
-            order['timestamp'] = datetime.datetime.now()
+        order['state'] = 'U'
+        order['timestamp'] = datetime.datetime.now()
+        with stock_lock(order['symbol']):
             self.orders.append(order)
-        else:
-            shares_left = order['amount']
-            if order['action'] == 'B':
-                for match in self._sorted_sell_orders(matches):
-                    if match['state'] == 'F':
-                        continue
-                    match['state'] = 'F' 
-                    if shares_left >= match['amount']:
-                        self.orders.append(self._trade_execution(match, order, match['amount'], match['price']))
-                        shares_left -= match['amount']
-                    else:
-                        self.orders.append(self._trade_execution(match, order, shares_left, match['price']))
-                        self.add_order(self._residual_order(match, match['amount'] - shares_left))
-                        shares_left = 0
-                        break
-            elif order['action'] == 'S':
-                for match in self._sorted_buy_orders(matches):
-                    if match['state'] == 'F':
-                        continue
-                    match['state'] = 'F'
-                    if shares_left >= match['amount']:
-                        self.orders.append(self._trade_execution(order, match, match['amount'], match['price']))
-                        shares_left -= match['amount']
-                    else:
-                        self.orders.append(self._trade_execution(order, match, shares_left, match['price']))
-                        self.add_order(self._residual_order(match, match['amount'] - shares_left))
-                        shares_left = 0
-                        break
-            if shares_left != 0:
-                self.add_order(self._residual_order(order, shares_left))
-            order['state'] = 'F' if shares_left != order['amount'] else 'U'
-            order['timestamp'] = datetime.datetime.now()
-            self.orders.append(order)    
+            matches = self.matching_orders(order)
+            if matches:
+                order['state'] = 'F'
+                shares_left = order['amount']
+                if order['action'] == 'B':
+                    for match in self._sorted_sell_orders(matches):
+                        if match['state'] == 'F':
+                            continue
+                        match['state'] = 'F' 
+                        if shares_left >= match['amount']:
+                            self.orders.append(self._trade_execution(match, order, match['amount'], match['price']))
+                            shares_left -= match['amount']
+                        else:
+                            self.orders.append(self._trade_execution(match, order, shares_left, match['price']))
+                            self.orders.append(self._residual_order(match, match['amount'] - shares_left))
+                            shares_left = 0
+                            break
+                elif order['action'] == 'S':
+                    for match in self._sorted_buy_orders(matches):
+                        if match['state'] == 'F':
+                            continue
+                        match['state'] = 'F'
+                        if shares_left >= match['amount']:
+                            self.orders.append(self._trade_execution(order, match, match['amount'], order['price']))
+                            shares_left -= match['amount']
+                        else:
+                            self.orders.append(self._trade_execution(order, match, shares_left, order['price']))
+                            self.orders.append(self._residual_order(match, match['amount'] - shares_left))
+                            shares_left = 0
+                            break
+                if shares_left != 0:
+                    self.orders.append(self._residual_order(order, shares_left))
 
     def _timestamp(self, o):
         return o['timestamp'] if not o['parent'] else o['parent']['timestamp']
@@ -123,6 +128,7 @@ class OrderBook(object):
     def _residual_order(self, parent, shares):
         order = defaultdict(str)
         order.update(parent)
+        order['state'] = 'U'
         order['timestamp'] = datetime.datetime.now()
         order['parent'] = parent['parent'] if parent['parent'] else parent
         if order['parent']:
