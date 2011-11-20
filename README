@@ -17,7 +17,9 @@ information.  Also had a couple of segfaults. Not sure what's causing this,
 considering I'm using python -- something inside tornado? :s
 
 I've had variable success with the time labels on the charts. What I have
-now seems to work properly on Chrome and Firefox, at least.
+now seems to work properly on Chrome and Firefox (at least on my laptop);
+in any case, you can mouse over the labels to see them in the tooltip, or
+mouse over the data points.
 
 The "Upload to Silanis" button when the snapshot is shown might appear at
 the bottom of the page, which might be far far down...
