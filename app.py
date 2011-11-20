@@ -1,5 +1,5 @@
 import json
-import itertools
+import threading
 import tornado.ioloop
 import tornado.web
 from tornado.httpclient import AsyncHTTPClient
@@ -86,9 +86,17 @@ class ResetHandler(tornado.web.RequestHandler):
 class SnapshotHandler(tornado.web.RequestHandler):
     snapshot = ''
     num = 1
+    @tornado.web.asynchronous
     def get(self):
+        threading.Thread(target=self._compute_snapshot).start()
+
+    def finish_get(self, html):
+        self.finish(html)
+
+    def _compute_snapshot(self):
         SnapshotHandler.snapshot = order_book.to_silanis_json()
-        self.finish(render_snapshot_html(order_book.get_all_stocks(), SnapshotHandler.snapshot))
+        html = render_snapshot_html(order_book.get_all_stocks(), SnapshotHandler.snapshot)
+        tornado.ioloop.IOLoop.instance().add_callback(lambda: self.finish_get(html))
 
     def post(self):
         message = {
