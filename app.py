@@ -48,14 +48,11 @@ class GUIHandler(tornado.web.RequestHandler):
             'time': o['timestamp'].strftime('%H:%M:%S'),
             'price': o['price']/100.0 + (o['price']%100)/100.0
         } for o in orders]
-        binned_data = [] 
-        for time, orders in itertools.groupby(raw_data, lambda o: o['time']):
-            order_list = list(orders)
-            binned_data.append({'time': time, 'price': sum(o['price'] for o in order_list)/len(order_list)})
+        bins = self._bin_data(raw_data, 'price')
         price_table = gviz_api.DataTable(description)
-        price_table.LoadData(binned_data)
+        price_table.LoadData(bins)
         return price_table.ToJSon(columns_order=('time', 'price'))        
-
+                                             
     def _load_volume_json(self, orders):
         description = {
             'time': ('string', 'Time'),
@@ -65,14 +62,21 @@ class GUIHandler(tornado.web.RequestHandler):
             'time': o['timestamp'].strftime('%H:%M:%S'),
             'volume': o['amount']
         } for o in orders]
-        binned_data = [] 
-        for time, orders in itertools.groupby(raw_data, lambda o: o['time']):
-            order_list = list(orders)
-            binned_data.append({'time': time, 'volume': int(1.0*sum(o['volume'] for o in order_list)/len(order_list))})
+        bins = self._bin_data(raw_data, 'volume')
         volume_table = gviz_api.DataTable(description)
-        volume_table.LoadData(binned_data)
+        volume_table.LoadData(bins)
         return volume_table.ToJSon(columns_order=('time', 'volume'))
-        
+
+    def _bin_data(self, data, valuekey, bins=20):
+        if (len(data) < bins):
+            return data
+        step = len(data)/bins
+        binned_data = [data[i:i+step] for i in range(0, len(data), step)]
+        binned_data = [{
+            'time': d[len(d)/2]['time'],
+            valuekey: 1.0*sum(o[valuekey] for o in d)/len(d)
+        } for d in binned_data]
+        return binned_data
 
 class ResetHandler(tornado.web.RequestHandler):
     def post(self):
