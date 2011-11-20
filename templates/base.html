@@ -18,7 +18,14 @@
     <form action="/exchange/snapshot" method="get">
         <input type="submit" value="Generate snapshot" />
     </form>         
-    {% block sidebar %}{% end %}
+    <form action="/exchange/home" method="post">
+    <select name="stock">
+    {% for stock in stocks %}
+    <option value="{{ stock }}">{{ stock }}</option>
+    {% end %}
+    </select>
+    <input type="submit" value="Visualize" />
+    </form>
     </div>
     <div id="body">
     {% block body %}{% end %}

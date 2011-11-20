@@ -84,7 +84,7 @@ class SnapshotHandler(tornado.web.RequestHandler):
     num = 1
     def get(self):
         SnapshotHandler.snapshot = order_book.to_silanis_json()
-        self.finish(render_snapshot_html(SnapshotHandler.snapshot))
+        self.finish(render_snapshot_html(order_book.get_all_stocks(), SnapshotHandler.snapshot))
 
     def post(self):
         message = {

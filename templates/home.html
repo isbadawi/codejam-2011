@@ -38,16 +38,6 @@
 <h2>Electronic Stock Exchange</h2>
 {% end %}
 
-{% block sidebar %}
-<form action="" method="post">
-<select name="stock">
-    {% for stock in stocks %}
-    <option value="{{ stock }}">{{ stock }}</option>
-    {% end %}
-</select>
-<input type="submit" value="Visualize" />
-</form>
-{% end %}
 
 {% block body %}
 <div id="price_chart"></div>

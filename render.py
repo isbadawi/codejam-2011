@@ -24,8 +24,8 @@ def render_reject_xml(reason):
 def render_accept_xml(order_id):
     return _accept.generate(order_id=order_id)
 
-def render_snapshot_html(items):
-    return _snapshot.generate(items=items)
+def render_snapshot_html(stocks, items):
+    return _snapshot.generate(stocks=stocks, items=items)
 
 def render_home_page(stocks, prices=None, volume=None, symbol=None):
     return _homepage.generate(stocks=stocks, prices=prices, volume=volume, symbol=symbol)
