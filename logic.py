@@ -40,8 +40,8 @@ class OrderBook(object):
     def get_all_stocks(self):
         return set(o['symbol'] for o in self.orders)
 
-    def orders_for_stock(self, stock):
-        return [o for o in self.orders if o['symbol'] == stock]
+    def trades_for_stock(self, stock):
+        return [t for t in self.trades if t['symbol'] == stock]
 
     def reset(self):
         self.orders = []

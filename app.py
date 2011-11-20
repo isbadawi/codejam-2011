@@ -1,5 +1,6 @@
 import json
 import threading
+from multiprocessing.pool import ThreadPool
 import tornado.ioloop
 import tornado.web
 from tornado.httpclient import AsyncHTTPClient
@@ -11,7 +12,6 @@ from render import render_reject_xml, render_accept_xml, render_snapshot_html, r
 
 SILANIS_URL = 'http://ec2-184-73-166-185.compute-1.amazonaws.com/aws/rest/services/codejam/processes'
 SILANIS_AUTH = 'Y29kZWphbTpzZWNyZXQ='
-#AsyncHTTPClient.configure('tornado.curl_httpclient.CurlAsyncHTTPClient')
 httpclient = AsyncHTTPClient()
 order_book = OrderBook(httpclient)
 class TradeHandler(tornado.web.RequestHandler):
@@ -34,7 +34,7 @@ class GUIHandler(tornado.web.RequestHandler):
 
     def post(self):
         stock = self.get_argument('stock')
-        orders = order_book.orders_for_stock(stock)
+        orders = order_book.trades_for_stock(stock)
         prices = self._load_price_json(orders)
         volume = self._load_volume_json(orders)
         self.finish(render_home_page(order_book.get_all_stocks(), prices, volume, stock))
