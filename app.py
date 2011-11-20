@@ -1,6 +1,5 @@
 import json
 import threading
-from multiprocessing.pool import ThreadPool
 import tornado.ioloop
 import tornado.web
 from tornado.httpclient import AsyncHTTPClient

@@ -33,8 +33,9 @@ def stock_lock(stock):
 class OrderBook(object):
     def __init__(self, httpclient):
         self.orders = []
+        self.unfilled = []
         self.trades = []
-        self.pool = ThreadPool(10)
+        self.pool = ThreadPool(30)
         self.httpclient = httpclient
 
     def get_all_stocks(self):
@@ -45,6 +46,7 @@ class OrderBook(object):
 
     def reset(self):
         self.orders = []
+        self.unfilled = []
         self.trades = []
         stock_locks.clear()
         match_number[0] = 0
@@ -87,22 +89,27 @@ class OrderBook(object):
         order['state'] = 'U'
         order['timestamp'] = datetime.datetime.now()
         with stock_lock(order['symbol']):
+            self.unfilled.append(order)
             self.orders.append(order)
             matches = self.matching_orders(order)
             if matches:
                 order['state'] = 'F'
+                self.unfilled.remove(order)
                 shares_left = order['amount']
                 if order['action'] == 'B':
                     for match in self._sorted_sell_orders(matches):
                         if match['state'] == 'F':
                             continue
                         match['state'] = 'F' 
+                        self.unfilled.remove(match)
                         if shares_left >= match['amount']:
                             self.trades.append(self._trade_execution(match, order, match['amount'], match['price']))
                             shares_left -= match['amount']
                         else:
                             self.trades.append(self._trade_execution(match, order, shares_left, match['price']))
-                            self.orders.append(self._residual_order(match, match['amount'] - shares_left))
+                            residual = self._residual_order(match, match['amount'] - shares_left)
+                            self.unfilled.append(residual)
+                            self.orders.append(residual)
                             shares_left = 0
                             break
                 elif order['action'] == 'S':
@@ -110,16 +117,21 @@ class OrderBook(object):
                         if match['state'] == 'F':
                             continue
                         match['state'] = 'F'
+                        self.unfilled.remove(match)
                         if shares_left >= match['amount']:
                             self.trades.append(self._trade_execution(order, match, match['amount'], order['price']))
                             shares_left -= match['amount']
                         else:
                             self.trades.append(self._trade_execution(order, match, shares_left, order['price']))
-                            self.orders.append(self._residual_order(match, match['amount'] - shares_left))
+                            residual = self._residual_order(match, match['amount'] - shares_left)
+                            self.unfilled.append(residual)
+                            self.orders.append(residual)
                             shares_left = 0
                             break
                 if shares_left != 0:
-                    self.orders.append(self._residual_order(order, shares_left))
+                    residual = self._residual_order(order, shares_left)
+                    self.unfilled.append(residual)
+                    self.orders.append(residual)
 
     def _timestamp(self, o):
         return o['timestamp'] if not o['parent'] else o['parent']['timestamp']
@@ -131,7 +143,7 @@ class OrderBook(object):
         return sorted(matches, key=lambda o: (-o['price'], self._timestamp(o)))
 
     def matching_orders(self, order):
-        return [old for old in self.orders if self._orders_match(old, order)]
+        return [old for old in self.unfilled if self._orders_match(old, order)]
 
     def _trade_execution(self, seller, buyer, shares, price):
         trade = defaultdict(str)
