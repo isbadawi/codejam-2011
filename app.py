@@ -81,7 +81,7 @@ class ResetHandler(tornado.web.RequestHandler):
 
 class SnapshotHandler(tornado.web.RequestHandler):
     snapshot = ''
-    num = 0
+    num = 1
     def get(self):
         SnapshotHandler.snapshot = order_book.to_silanis_json()
         self.finish(render_snapshot_html(SnapshotHandler.snapshot))

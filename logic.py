@@ -146,6 +146,8 @@ class OrderBook(object):
             'To': order['phone']
         }
         self.httpclient.fetch(order['broker'], lambda r: None, method='POST', body=urlencode(params))
+        if (order['twilio'] == 'Y'):
+            sms_message = 'Your order %s has been executed on for %d shares. Match number is %d. Execution price is %d.%02d per share.' % (params['OrderReferenceIdentifier'], params['ExecutedShares'], params['MatchNumber'], price / 100, price % 100)
 
     def _log_response(self, response):
         print response.code

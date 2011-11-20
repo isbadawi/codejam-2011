@@ -42,6 +42,7 @@ a {
 
 #body {
     margin-top: 1px;
+    clear: left;
 }
 
 table {
