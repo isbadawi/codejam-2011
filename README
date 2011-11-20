@@ -1,0 +1,34 @@
+Team Pinky and the Brain
+    --actually only one member: Ismail Badawi
+
+Start the application in the VM by opening a terminal, changing to the 
+~/codejam-2011 directory, and running
+
+python app.py
+
+The application runs on http://localhost:3487/exchange/endpoint
+The GUI can be accessed at http://localhost:3487/exchange/home
+
+=======
+Remarks
+=======
+The app rarely (but occasionally) crashes after dumping some memory space
+information.  Also had a couple of segfaults. Not sure what's causing this,
+considering I'm using python -- something inside tornado? :s
+
+I've had variable success with the time labels on the charts. What I have
+now seems to work properly on Chrome and Firefox, at least.
+
+The "Upload to Silanis" button when the snapshot is shown might appear at
+the bottom of the page, which might be far far down...
+
+All the dependencies are on the VM, but for reference, the app uses:
+
+python 2.7 (haven't tested on earlier versions, but 2.5+ should be okay?)
+    installed by default on the provided Ubuntu VM
+tornado 2.1.1 
+    available on pip
+gviz_api 1.7.0 (Google visualization Python API)
+    available at http://code.google.com/p/google-visualization-python/
+twilio-python 3.3.3
+    available on pip
