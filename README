@@ -32,5 +32,8 @@ tornado 2.1.1
     available on pip
 gviz_api 1.7.0 (Google visualization Python API)
     available at http://code.google.com/p/google-visualization-python/
+(I've included this in the project directory because I had strange issues
+ with the module being importable but none of the names in it being
+ available...)
 twilio-python 3.3.3
     available on pip

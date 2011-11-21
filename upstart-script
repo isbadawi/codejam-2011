@@ -1,0 +1,10 @@
+description "start and stop pinky and the brain"
+version "1.0"
+author "Ismail Badawi"
+
+start on (net-device-up and local-filesystems and runlevel [2345])
+
+script
+chdir /home/mcj/codejam-2011
+exec /usr/bin/python app.py &
+end script

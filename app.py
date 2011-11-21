@@ -106,8 +106,8 @@ class SnapshotHandler(tornado.web.RequestHandler):
                 'email': 'isbadawi@gmail.com',
             },
             'signer': {
-                'name': 'Ismail Badawi',
-                'email': 'ismail.badawi@mail.mcgill.ca',
+                'name': 'The Judges',
+                'email': 'mcj2011morgan@gmail.com',
             },
             'transactions': SnapshotHandler.snapshot
         }
